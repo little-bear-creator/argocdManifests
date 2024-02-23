@@ -1,0 +1,38 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: helmargo
+  namespace: argocd
+  labels:
+    type: helm
+    namespace: spring-apps-dev
+spec:
+  project: spring-apps
+  source:
+    repoURL: https://github.com/mkonzali/DemoHelmChart.git
+    targetRevision: HEAD
+    path: .
+    helm:
+      releaseName: helmargo
+      skipCrds: true
+      valueFiles:
+      - values.yaml
+      - dev-values.yaml
+      parameters:
+      - name: image.tag
+        value: 1.0.0
+  ignoreDifferences:
+  - group: apps
+    kind: Deployment
+    jsonPointers:
+      - /spec/replicas
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: spring-apps-dev
+  syncPolicy:
+    syncOptions:
+    - CreateNamespace=true 
+    automated:
+      selfHeal: true
+      prune: true
+
