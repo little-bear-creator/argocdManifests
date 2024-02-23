@@ -1,0 +1,104 @@
+appProjects:
+  - name: spring-apps
+    namespace: argocd
+    finalizers:
+      - resources-finalizer.argocd.argoproj.io
+    description: Spring Applications Project
+    sourceRepos:
+      - '*'
+    destinations: 
+      - namespace: spring-apps-dev  
+        server: 'https://kubernetes.default.svc'
+    clusterResourceWhitelist:
+      - group: '*'
+        kind: '*'
+    namespaceResourceBlacklist:
+      - group: ''
+        kind: ResourceQuota
+      - group: ''
+        kind: LimitRange
+      - group: ''
+        kind: NetworkPolicy
+    namespaceResourceWhitelist:
+      - group: '*'
+        kind: '*'
+    roles:
+      - name: read-only
+        description: Read-only privileges to spring-apps
+        policies:
+          - p, proj:spring-apps:read-only, applications, get, spring-apps/*, allow
+        groups:
+          - guest
+      - name: synconly-role
+        description: Sync-only privileges for guestbook-dev
+        policies:
+          - p, proj:spring-apps:synconly-role, applications, sync, spring-apps/guestbook-dev, allow
+        groups:
+          - deploy-agent
+      - name: manager-role
+        description: Manager privileges for spring-apps
+        policies:
+          - p, proj:spring-apps:manager-role, applications, '*', '*', allow
+        groups:
+          - mahdi
+
+applications:
+  - name: bluegreen
+    namespace: argocd
+    project: default
+    repoURL: https://github.com/argoproj/rollouts-demo.git
+    targetRevision: HEAD
+    path: examples/blue-green
+    destination:
+      server: https://kubernetes.default.svc
+      namespace: rollouts
+    syncOptions:
+      - CreateNamespace=true 
+    automated:
+      selfHeal: true
+      prune: true
+  - name: helmargo
+    namespace: argocd
+    labels:
+      type: helm
+      namespace: spring-apps-dev
+    project: spring-apps
+    repoURL: https://github.com/mkonzali/DemoHelmChart.git
+    targetRevision: HEAD
+    path: .
+    helm:
+      releaseName: helmargo
+      skipCrds: true
+      valueFiles:
+        - values.yaml
+        - dev-values.yaml
+      parameters:
+        - name: image.tag
+          value: 1.0.0
+    ignoreDifferences:
+      - group: apps
+        kind: Deployment
+        jsonPointers:
+          - /spec/replicas
+    destination:
+      server: https://kubernetes.default.svc
+      namespace: spring-apps-dev
+    syncOptions:
+      - CreateNamespace=true 
+    automated:
+      selfHeal: true
+      prune: true
+  - name: demoargo
+    namespace: argocd
+    project: default
+    repoURL: https://github.com/mkonzali/DemoManifests.git
+    targetRevision: work
+    path: demoargo
+    destination:
+      server: https://kubernetes.default.svc
+      namespace: spring-apps-dev
+    syncOptions:
+      - CreateNamespace=true 
+    automated:
+      selfHeal: true
+      prune: true

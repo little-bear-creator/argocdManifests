@@ -1,0 +1,20 @@
+{{- range .Values.applications }}
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: {{ .name }}
+  namespace: {{ .namespace }}
+  labels: {{ .labels }}
+spec:
+  project: {{ .project }}
+  source:
+    repoURL: {{ .repoURL }}
+    targetRevision: {{ .targetRevision }}
+    path: {{ .path }}
+    helm: {{ .helm }}
+  destination: {{ .destination }}
+  syncPolicy:
+    syncOptions: {{ .syncOptions }}
+    automated: {{ .automated }}
+---
+{{- end }}
