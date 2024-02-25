@@ -1,46 +1,15 @@
 appProjects:
   - name: spring-apps
-    namespace: argocd
-    finalizers:
-      - resources-finalizer.argocd.argoproj.io
-    description: Spring Applications Project
+    description: 'Spring Applications Project'
     sourceRepos:
-      - '*'
-    destinations: 
-      - namespace: spring-apps-dev  
-        server: 'https://kubernetes.default.svc'
-    clusterResourceWhitelist:
-      - group: '*'
-        kind: '*'
-    namespaceResourceBlacklist:
-      - group: ''
-        kind: ResourceQuota
-      - group: ''
-        kind: LimitRange
-      - group: ''
-        kind: NetworkPolicy
-    namespaceResourceWhitelist:
-      - group: '*'
-        kind: '*'
-    roles:
-      - name: read-only
-        description: Read-only privileges to spring-apps
-        policies:
-          - p, proj:spring-apps:read-only, applications, get, spring-apps/*, allow
-        groups:
-          - guest
-      - name: synconly-role
-        description: Sync-only privileges for guestbook-dev
-        policies:
-          - p, proj:spring-apps:synconly-role, applications, sync, spring-apps/guestbook-dev, allow
-        groups:
-          - deploy-agent
-      - name: manager-role
-        description: Manager privileges for spring-apps
-        policies:
-          - p, proj:spring-apps:manager-role, applications, '*', '*', allow
-        groups:
-          - mahdi
+    - '*'
+    namespaces: 
+    - spring-apps-dev 
+    managerGroups:
+    - mahdi
+    syncOnlyGroups:
+    readOnlyGroups:
+    - guest
 
 applications:
   - name: bluegreen

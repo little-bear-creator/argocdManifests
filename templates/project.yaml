@@ -1,0 +1,73 @@
+#templates/project.yaml
+{{- range .Values.appProjects }}
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: {{ .name }}
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  description: {{ .description }}
+  sourceRepos: 
+  {{- range .sourceRepos }}
+  - {{ . | quote }}
+  {{- end }}
+  destinations: 
+  {{- range .namespaces }}
+  - namespace: {{ . }}
+    server: 'https://kubernetes.default.svc'
+  {{- end }}
+  clusterResourceWhitelist:
+  - group: '*'
+    kind: '*'
+  namespaceResourceBlacklist:
+  - group: ''
+    kind: ResourceQuota
+  - group: ''
+    kind: LimitRange
+  - group: ''
+    kind: NetworkPolicy
+  namespaceResourceWhitelist:
+  - group: '*'
+    kind: '*'
+  roles:
+  - name: read-only
+    description: Read-only privileges to spring-apps
+    policies:
+      - p, proj:spring-apps:read-only, applications, get, spring-apps/*, allow
+    groups:
+      {{- range .readOnlyGroups }}
+      - {{ . }}
+      {{- end }}
+  - name: synconly-role
+    description: Sync-only privileges for guestbook-dev
+    policies:
+      - p, proj:spring-apps:synconly-role, applications, sync, spring-apps/guestbook-dev, allow
+    groups:
+      - deploy-agent      
+      {{- range .syncOnlyGroups }}
+      - {{ . }}
+      {{- end }}
+  - name: manager-role
+    description: Manager privileges for spring-apps
+    policies:
+      - p, proj:spring-apps:manager-role, applications, '*', '*', allow
+    groups:
+      {{- range .managerGroups }}
+      - {{ . }}
+      {{- end }}
+  {{- range .additionalRoles }}
+  - name: {{ .name }}
+    description: Manager privileges for spring-apps
+    policies:
+      {{- range .policies }}
+      - {{ . }}
+      {{- end }}
+    groups:
+      {{- range .groups }}
+      - {{ . }}
+      {{- end }}
+  {{- end }}
+---
+{{- end }}
