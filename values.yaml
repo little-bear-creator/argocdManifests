@@ -13,21 +13,17 @@ appProjects:
 
 applications:
   - name: bluegreen
-    namespace: argocd
+    namespace: rollouts
     project: default
     repoURL: https://github.com/argoproj/rollouts-demo.git
     targetRevision: HEAD
     path: examples/blue-green
-    destination:
-      server: https://kubernetes.default.svc
-      namespace: rollouts
     syncOptions:
       - CreateNamespace=true 
-    automated:
-      selfHeal: true
-      prune: true
+    selfHeal: true
+    prune: true
   - name: helmargo
-    namespace: argocd
+    namespace: spring-apps-dev
     labels:
       type: helm
       namespace: spring-apps-dev
@@ -36,8 +32,6 @@ applications:
     targetRevision: HEAD
     path: .
     helm:
-      releaseName: helmargo
-      skipCrds: true
       valueFiles:
         - values.yaml
         - dev-values.yaml
@@ -49,25 +43,17 @@ applications:
         kind: Deployment
         jsonPointers:
           - /spec/replicas
-    destination:
-      server: https://kubernetes.default.svc
-      namespace: spring-apps-dev
     syncOptions:
       - CreateNamespace=true 
-    automated:
-      selfHeal: true
-      prune: true
+    selfHeal: true
+    prune: true
   - name: demoargo
-    namespace: argocd
+    namespace: spring-apps-dev
     project: default
     repoURL: https://github.com/mkonzali/DemoManifests.git
     targetRevision: work
     path: demoargo
-    destination:
-      server: https://kubernetes.default.svc
-      namespace: spring-apps-dev
     syncOptions:
       - CreateNamespace=true 
-    automated:
-      selfHeal: true
-      prune: true
+    selfHeal: true
+    prune: true

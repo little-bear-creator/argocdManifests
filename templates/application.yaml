@@ -3,18 +3,50 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: {{ .name }}
-  namespace: {{ .namespace }}
-  labels: {{ .labels }}
+  namespace: argocd
+  labels: 
+    {{- range $key, $value := .labels }}
+    {{ $key }}: {{ $value | quote }}
+    {{- end }}
 spec:
   project: {{ .project }}
   source:
     repoURL: {{ .repoURL }}
     targetRevision: {{ .targetRevision }}
     path: {{ .path }}
-    helm: {{ .helm }}
-  destination: {{ .destination }}
+    {{- if hasKey . "helm" }}
+    helm: 
+      releaseName: {{ .name }}
+      skipCrds: true
+      valueFiles:
+      {{- range .helm.valueFiles }}
+        - {{ . }}
+      {{- end }}
+      parameters:
+      {{- range .helm.parameters }}
+        - name: {{ .name }}
+          value: {{ .value }}
+      {{- end }}
+      ignoreDifferences:
+      {{- range .ignoreDifferences }}
+      - group: {{ .group }}
+        kind: {{ .kind }}
+        jsonPointers:
+        {{- range .jsonPointers }}
+          - {{ . }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
+  destination: 
+      server: https://kubernetes.default.svc
+      namespace: {{ .namespace }}
   syncPolicy:
-    syncOptions: {{ .syncOptions }}
-    automated: {{ .automated }}
+    syncOptions: 
+    {{- range .syncOptions }}
+      - {{ . }}
+    {{- end }}
+    automated: 
+      selfHeal: {{ .selfHeal }}
+      prune: {{ .prune }}
 ---
 {{- end }}
