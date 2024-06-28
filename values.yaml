@@ -6,7 +6,7 @@ appProjects:
     namespaces: 
     - spring-apps-dev 
     managerGroups:
-    - mahdi
+    - etudiant
     syncOnlyGroups:
     readOnlyGroups:
     - guest
